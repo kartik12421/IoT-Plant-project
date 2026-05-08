@@ -8,26 +8,102 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+import axios from "axios";
+
 export default function App() {
+
+  // ================= STATES =================
+
   const [pumpOn, setPumpOn] = useState(false);
 
-  useEffect(() => {
-  fetch("http://localhost:5000/sensor")
-    .then(res => res.json())
-    .then(data => {
-      console.log(data);
-    });
-}, []);
+  const [image, setImage] = useState(null);
 
-  // Dummy Live Data
+  const [aiResult, setAiResult] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  // ================= SENSOR FETCH =================
+
+  useEffect(() => {
+
+    fetch("http://localhost:5000/sensor")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+      });
+
+  }, []);
+
+  // ================= DUMMY DATA =================
+
   const soilMoisture = 68;
+
   const temperature = 29;
+
   const humidity = 72;
 
+  // ================= IMAGE STORE =================
+
+  const handleImageChange = (e) => {
+
+    const file = e.target.files[0];
+
+    setImage(file);
+
+    console.log(file);
+  };
+
+  // ================= AI SUBMIT =================
+
+  const handleAiSubmit = async () => {
+
+    try {
+
+      if (!image) {
+
+        alert("Please select image");
+
+        return;
+      }
+
+      setLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("image", image);
+
+      const res = await axios.post(
+
+        "http://localhost:5000/api/ai/predict",
+
+        formData ,{withCredentials:true}
+      );
+
+      
+
+      // AI result set
+      setAiResult(res.data.result);
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("AI Analysis Failed");
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-100 to-green-50 p-6">
-      {/* Header */}
+
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-50 p-6">
+
+      {/* ================= HEADER ================= */}
+
       <div className="mb-10">
+
         <h1 className="text-5xl font-bold text-green-800">
           🌱 AI Smart Farming Dashboard
         </h1>
@@ -35,15 +111,27 @@ export default function App() {
         <p className="text-gray-600 mt-3 text-lg">
           Real-time monitoring + AI plant analysis
         </p>
+
       </div>
 
-      {/* Sensor Cards */}
+      {/* ================= SENSOR CARDS ================= */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
         {/* Soil Moisture */}
         <div className="bg-white rounded-3xl shadow-xl p-6">
+
           <div className="flex items-center gap-3 mb-4">
-            <Droplets className="text-blue-500" size={32} />
-            <h2 className="text-2xl font-semibold">Soil Moisture</h2>
+
+            <Droplets
+              className="text-blue-500"
+              size={32}
+            />
+
+            <h2 className="text-2xl font-semibold">
+              Soil Moisture
+            </h2>
+
           </div>
 
           <div className="text-6xl font-bold text-blue-600">
@@ -51,57 +139,79 @@ export default function App() {
           </div>
 
           <div className="w-full bg-gray-200 rounded-full h-4 mt-5">
+
             <div
               className="bg-blue-500 h-4 rounded-full"
-              style={{ width: `${soilMoisture}%` }}
+              style={{
+                width: `${soilMoisture}%`,
+              }}
             ></div>
+
           </div>
 
-          <p className="mt-4 text-gray-500">
-            Current soil water level
-          </p>
         </div>
 
         {/* Temperature */}
         <div className="bg-white rounded-3xl shadow-xl p-6">
+
           <div className="flex items-center gap-3 mb-4">
-            <Thermometer className="text-red-500" size={32} />
-            <h2 className="text-2xl font-semibold">Temperature</h2>
+
+            <Thermometer
+              className="text-red-500"
+              size={32}
+            />
+
+            <h2 className="text-2xl font-semibold">
+              Temperature
+            </h2>
+
           </div>
 
           <div className="text-6xl font-bold text-red-500">
             {temperature}°C
           </div>
 
-          <p className="mt-5 text-gray-500">
-            Environment temperature
-          </p>
         </div>
 
         {/* Humidity */}
         <div className="bg-white rounded-3xl shadow-xl p-6">
+
           <div className="flex items-center gap-3 mb-4">
-            <Leaf className="text-green-600" size={32} />
-            <h2 className="text-2xl font-semibold">Humidity</h2>
+
+            <Leaf
+              className="text-green-600"
+              size={32}
+            />
+
+            <h2 className="text-2xl font-semibold">
+              Humidity
+            </h2>
+
           </div>
 
           <div className="text-6xl font-bold text-green-600">
             {humidity}%
           </div>
 
-          <p className="mt-5 text-gray-500">
-            Atmospheric humidity
-          </p>
         </div>
+
       </div>
 
-      {/* Pump Control */}
+      {/* ================= PUMP CONTROL ================= */}
+
       <div className="mt-10 bg-white rounded-3xl shadow-xl p-6">
+
         <div className="flex flex-col md:flex-row items-center justify-between">
+
           <div className="flex items-center gap-4">
-            <Power className="text-yellow-500" size={35} />
+
+            <Power
+              className="text-yellow-500"
+              size={35}
+            />
 
             <div>
+
               <h2 className="text-3xl font-semibold">
                 Water Pump Control
               </h2>
@@ -109,7 +219,9 @@ export default function App() {
               <p className="text-gray-500 mt-1">
                 Automatic irrigation system
               </p>
+
             </div>
+
           </div>
 
           <button
@@ -120,23 +232,39 @@ export default function App() {
                 : "bg-red-500 hover:bg-red-600"
             }`}
           >
-            {pumpOn ? "Pump ON" : "Pump OFF"}
+
+            {
+              pumpOn
+                ? "Pump ON"
+                : "Pump OFF"
+            }
+
           </button>
+
         </div>
+
       </div>
 
-      {/* AI Plant Analysis */}
+      {/* ================= AI SECTION ================= */}
+
       <div className="mt-10 bg-white rounded-3xl shadow-xl p-6">
+
         <div className="flex items-center gap-3 mb-8">
-          <Upload className="text-purple-500" size={35} />
+
+          <Upload
+            className="text-purple-500"
+            size={35}
+          />
 
           <h2 className="text-3xl font-semibold">
             AI Plant Health Detection
           </h2>
+
         </div>
 
-        {/* Upload Section */}
+        {/* Upload Box */}
         <div className="border-2 border-dashed border-gray-300 rounded-3xl p-10 text-center">
+
           <Upload
             className="mx-auto text-gray-400 mb-5"
             size={60}
@@ -148,43 +276,104 @@ export default function App() {
 
           <input
             type="file"
+            accept="image/*"
+            onChange={handleImageChange}
             className="mb-5 block mx-auto"
           />
 
-          <button className="bg-purple-600 hover:bg-purple-700 transition-all text-white px-8 py-4 rounded-2xl text-lg font-semibold">
-            Analyze Plant
+          {/* Preview */}
+          {
+            image && (
+
+              <img
+                src={URL.createObjectURL(image)}
+                alt="preview"
+                className="w-60 rounded-2xl mx-auto mb-5 shadow-lg"
+              />
+
+            )
+          }
+
+          {/* Button */}
+          <button
+            onClick={handleAiSubmit}
+            className="bg-purple-600 hover:bg-purple-700 transition-all text-white px-8 py-4 rounded-2xl text-lg font-semibold"
+          >
+
+            {
+              loading
+                ? "Analyzing..."
+                : "Analyze Plant"
+            }
+
           </button>
+
         </div>
 
-        {/* Prediction */}
-        <div className="mt-8 bg-yellow-50 border border-yellow-300 rounded-3xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle
-              className="text-yellow-600"
-              size={30}
-            />
+        {/* ================= AI RESULT ================= */}
 
-            <h3 className="text-2xl font-semibold text-yellow-700">
-              AI Prediction
-            </h3>
-          </div>
+        {
+          aiResult && (
 
-          <p className="text-2xl font-medium text-gray-800">
-            Nitrogen Deficiency Detected 🍂
-          </p>
+            <div className="mt-8 bg-white rounded-3xl shadow-2xl p-8 border border-green-200">
 
-          <ul className="mt-5 list-disc ml-6 text-gray-700 text-lg space-y-2">
-            <li>Add nitrogen-rich fertilizer</li>
-            <li>Reduce excess watering</li>
-            <li>Monitor leaf condition for 3 days</li>
-          </ul>
-        </div>
+              <div className="flex items-center gap-4 mb-6">
+
+                <AlertTriangle
+                  className="text-yellow-500"
+                  size={35}
+                />
+
+                <h2 className="text-3xl font-bold text-green-800">
+                  AI Plant Report
+                </h2>
+
+              </div>
+
+              <div className="space-y-4">
+
+                {
+                  aiResult
+                    .split("\n")
+                    .filter(
+                      (line) =>
+                        line.trim() !== ""
+                    )
+                    .map((line, index) => (
+
+                      <div
+                        key={index}
+                        className="bg-green-50 border border-green-100 p-5 rounded-2xl"
+                      >
+
+                        <p className="text-gray-700 text-lg leading-8">
+
+                          {
+                            line.replace(/\*/g, "")
+                          }
+
+                        </p>
+
+                      </div>
+                    ))
+                }
+
+              </div>
+
+            </div>
+          )
+        }
+
       </div>
 
-      {/* Footer */}
+      {/* ================= FOOTER ================= */}
+
       <div className="mt-12 text-center text-gray-500 text-lg">
+
         Built with React + ESP32 + AI 🌿
+
       </div>
+
     </div>
   );
 }
