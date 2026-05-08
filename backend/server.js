@@ -4,6 +4,7 @@ import express from "express"
 import cors from "cors"
 import aiRouter from "./routes/ai.route.js";
 import dotenv from "dotenv"
+import espRouter from "./routes/esp.route.js";
 dotenv.config()
 
 
@@ -17,17 +18,18 @@ app.use(
 );
 app.use(express.json());
 
-// app.get("/sensor", (req, res) => {
-//   res.json({
-//     moisture: 65,
-//     temperature: 28,
-//     humidity: 72,
-//     pump: true,
-//   });
-// });
+app.get("/", (req, res) => {
+
+  res.send("Backend Working");
+});
+
 
 app.use("/api/ai", aiRouter)
+app.use("/api/esp", espRouter);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+app.listen(5000, "0.0.0.0", () => {
+
+  console.log(
+    "Server running on port 5000"
+  );
 });
