@@ -5,7 +5,7 @@ export const AIPredictController = async (req, res) => {
 
   try {
 
-    // ================= IMAGE =================
+
 
     const file = req.file;
 
@@ -17,7 +17,6 @@ export const AIPredictController = async (req, res) => {
       });
     }
 
-    // ================= IMAGE TO BASE64 =================
 
     const imagePath = file.path;
 
@@ -28,7 +27,7 @@ export const AIPredictController = async (req, res) => {
       }
     );
 
-    // ================= PROMPT =================
+
 
     const prompt = `
 You are an AI plant doctor.
@@ -46,7 +45,7 @@ Tell:
 Give clean readable short response.
 `;
 
-    // ================= GEMINI API =================
+
 
     const response = await axios.post(
 
@@ -83,13 +82,13 @@ Give clean readable short response.
       }
     );
 
-    // ================= SAFE RESPONSE =================
+
 
     const result =
       response?.data?.candidates?.[0]
         ?.content?.parts?.[0]?.text;
 
-    // ================= EMPTY CHECK =================
+
 
     if (!result) {
 
@@ -99,7 +98,7 @@ Give clean readable short response.
       });
     }
 
-    // ================= SUCCESS =================
+
 
     return res.status(200).json({
       success: true,
