@@ -79,7 +79,7 @@ export default function App() {
         formData ,{withCredentials:true}
       );
 
-      console.log(res);
+      
 
       // AI result set
       setAiResult(res.data.result);
