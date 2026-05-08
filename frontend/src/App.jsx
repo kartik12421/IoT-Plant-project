@@ -6,6 +6,7 @@ import {
   Power,
   Upload,
   AlertTriangle,
+  Sun,
 } from "lucide-react";
 
 import axios from "axios";
@@ -13,6 +14,8 @@ import axios from "axios";
 export default function App() {
 
   // ================= STATES =================
+
+  const [sensorData, setSensorData] = useState(null);
 
   const [pumpOn, setPumpOn] = useState(false);
 
@@ -22,25 +25,47 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
 
-  // ================= SENSOR FETCH =================
+  // ================= FETCH SENSOR DATA =================
+
+  const fetchSensorData = async () => {
+
+    try {
+
+      const res = await axios.get(
+        "http://localhost:5000/api/esp/sensor"
+      );
+
+      console.log("Realtime Sensor Data => ", res.data);
+
+      const latestData = res.data.data;
+
+      setSensorData(latestData);
+
+      setPumpOn(latestData?.pump);
+
+    } catch (error) {
+
+      console.log("Sensor Fetch Error => ", error);
+
+    }
+  };
+
+  // ================= REALTIME FETCH =================
 
   useEffect(() => {
 
-    fetch("http://localhost:5000/sensor")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-      });
+    fetchSensorData();
+
+    // realtime refresh every 2 sec
+    const interval = setInterval(() => {
+
+      fetchSensorData();
+
+    }, 2000);
+
+    return () => clearInterval(interval);
 
   }, []);
-
-  // ================= DUMMY DATA =================
-
-  const soilMoisture = 68;
-
-  const temperature = 29;
-
-  const humidity = 72;
 
   // ================= IMAGE STORE =================
 
@@ -50,7 +75,6 @@ export default function App() {
 
     setImage(file);
 
-    console.log(file);
   };
 
   // ================= AI SUBMIT =================
@@ -73,15 +97,10 @@ export default function App() {
       formData.append("image", image);
 
       const res = await axios.post(
-
         "http://localhost:5000/api/ai/predict",
-
-        formData ,{withCredentials:true}
+        formData
       );
 
-      
-
-      // AI result set
       setAiResult(res.data.result);
 
     } catch (error) {
@@ -93,6 +112,7 @@ export default function App() {
     } finally {
 
       setLoading(false);
+
     }
   };
 
@@ -116,9 +136,10 @@ export default function App() {
 
       {/* ================= SENSOR CARDS ================= */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-        {/* Soil Moisture */}
+        {/* ================= SOIL MOISTURE ================= */}
+
         <div className="bg-white rounded-3xl shadow-xl p-6">
 
           <div className="flex items-center gap-3 mb-4">
@@ -135,23 +156,19 @@ export default function App() {
           </div>
 
           <div className="text-6xl font-bold text-blue-600">
-            {soilMoisture}%
-          </div>
 
-          <div className="w-full bg-gray-200 rounded-full h-4 mt-5">
-
-            <div
-              className="bg-blue-500 h-4 rounded-full"
-              style={{
-                width: `${soilMoisture}%`,
-              }}
-            ></div>
+            {
+              sensorData
+                ? sensorData.moisture
+                : "..."
+            }
 
           </div>
 
         </div>
 
-        {/* Temperature */}
+        {/* ================= TEMPERATURE ================= */}
+
         <div className="bg-white rounded-3xl shadow-xl p-6">
 
           <div className="flex items-center gap-3 mb-4">
@@ -168,12 +185,48 @@ export default function App() {
           </div>
 
           <div className="text-6xl font-bold text-red-500">
-            {temperature}°C
+
+            {
+              sensorData
+                ? `${sensorData.temperature}°C`
+                : "..."
+            }
+
           </div>
 
         </div>
 
-        {/* Humidity */}
+        {/* ================= LIGHT SENSOR ================= */}
+
+        <div className="bg-white rounded-3xl shadow-xl p-6">
+
+          <div className="flex items-center gap-3 mb-4">
+
+            <Sun
+              className="text-yellow-500"
+              size={32}
+            />
+
+            <h2 className="text-2xl font-semibold">
+              Light Sensor
+            </h2>
+
+          </div>
+
+          <div className="text-6xl font-bold text-yellow-500">
+
+            {
+              sensorData
+                ? sensorData.light
+                : "..."
+            }
+
+          </div>
+
+        </div>
+
+        {/* ================= ENVIRONMENT ================= */}
+
         <div className="bg-white rounded-3xl shadow-xl p-6">
 
           <div className="flex items-center gap-3 mb-4">
@@ -184,20 +237,26 @@ export default function App() {
             />
 
             <h2 className="text-2xl font-semibold">
-              Humidity
+              Environment
             </h2>
 
           </div>
 
-          <div className="text-6xl font-bold text-green-600">
-            {humidity}%
+          <div className="text-4xl font-bold text-green-600">
+
+            {
+              sensorData
+                ? sensorData.environment
+                : "..."
+            }
+
           </div>
 
         </div>
 
       </div>
 
-      {/* ================= PUMP CONTROL ================= */}
+      {/* ================= PUMP STATUS ================= */}
 
       <div className="mt-10 bg-white rounded-3xl shadow-xl p-6">
 
@@ -213,7 +272,7 @@ export default function App() {
             <div>
 
               <h2 className="text-3xl font-semibold">
-                Water Pump Control
+                Water Pump Status
               </h2>
 
               <p className="text-gray-500 mt-1">
@@ -225,11 +284,10 @@ export default function App() {
           </div>
 
           <button
-            onClick={() => setPumpOn(!pumpOn)}
             className={`mt-5 md:mt-0 px-8 py-4 rounded-2xl text-white text-xl font-semibold transition-all duration-300 ${
               pumpOn
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-500 hover:bg-red-600"
+                ? "bg-green-600"
+                : "bg-red-500"
             }`}
           >
 
@@ -262,7 +320,8 @@ export default function App() {
 
         </div>
 
-        {/* Upload Box */}
+        {/* ================= UPLOAD BOX ================= */}
+
         <div className="border-2 border-dashed border-gray-300 rounded-3xl p-10 text-center">
 
           <Upload
@@ -281,7 +340,8 @@ export default function App() {
             className="mb-5 block mx-auto"
           />
 
-          {/* Preview */}
+          {/* ================= PREVIEW ================= */}
+
           {
             image && (
 
@@ -294,7 +354,8 @@ export default function App() {
             )
           }
 
-          {/* Button */}
+          {/* ================= BUTTON ================= */}
+
           <button
             onClick={handleAiSubmit}
             className="bg-purple-600 hover:bg-purple-700 transition-all text-white px-8 py-4 rounded-2xl text-lg font-semibold"
@@ -336,8 +397,7 @@ export default function App() {
                   aiResult
                     .split("\n")
                     .filter(
-                      (line) =>
-                        line.trim() !== ""
+                      (line) => line.trim() !== ""
                     )
                     .map((line, index) => (
 
@@ -355,12 +415,14 @@ export default function App() {
                         </p>
 
                       </div>
+
                     ))
                 }
 
               </div>
 
             </div>
+
           )
         }
 
