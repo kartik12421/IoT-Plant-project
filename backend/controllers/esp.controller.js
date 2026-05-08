@@ -14,7 +14,6 @@ export const esp2Controller = async (req, res) => {
       pump
     } = req.body;
 
-    // update latest document
     const data = await SensorData.findOneAndUpdate(
 
       {},
