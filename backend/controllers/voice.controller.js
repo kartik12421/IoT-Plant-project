@@ -13,12 +13,12 @@ export const chat = async (req, res) => {
 
     // 🔥 GEMINI API CALL (LATEST STYLE)
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": process.env.voice_key,
+          "x-goog-api-key": process.env.VOICE_KEY,
         },
         body: JSON.stringify({
           contents: [
@@ -32,7 +32,7 @@ export const chat = async (req, res) => {
             },
           ],
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -49,8 +49,7 @@ export const chat = async (req, res) => {
     }
 
     // ❌ HANDLE EMPTY RESPONSE
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!reply) {
       return res.status(500).json({
@@ -62,7 +61,6 @@ export const chat = async (req, res) => {
     res.json({
       reply,
     });
-
   } catch (error) {
     console.log("❌ SERVER ERROR:", error);
 
